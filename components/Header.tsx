@@ -3,8 +3,11 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import Image from "next/image";
 import Link from "next/link";
-
+import { SignOutButton } from '@clerk/nextjs'
 const Header = () => {
+
+ 
+
   return (
     <header className="bg-slate-800 p-3 md:py-3">
       <div className="container mx-auto flex items-center gap-5">
@@ -23,7 +26,7 @@ const Header = () => {
        <Input className="text-slate-50" placeholder="Search Products..." />
        </div>
 
-       <Button variant={'destructive'}>LOGIN</Button>
+       <SignOutButton />
 
 
 

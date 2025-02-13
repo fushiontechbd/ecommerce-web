@@ -13,3 +13,9 @@ export const signInSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8).max(50)
 })
+
+
+export const otpSchema = z.object({
+  
+  otp: z.string().nonempty("Otp Is Required")
+})

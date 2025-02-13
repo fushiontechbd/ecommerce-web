@@ -1,10 +1,10 @@
 
 "use client"
-import React from 'react'
+import React, { useState } from 'react'
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { signUpSchema } from '@/lib/validations'
+import { otpSchema, signUpSchema } from '@/lib/validations'
 
 
 import { Button } from "@/components/ui/button"
@@ -18,10 +18,14 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { useSignUp } from '@clerk/nextjs'
+import { log } from 'console'
+import { useRouter } from 'next/navigation'
+
 
 
 const page = () => {
-
+  const { isLoaded,signUp, setActive } = useSignUp();
 
     const form = useForm<z.infer<typeof signUpSchema>>({
         resolver: zodResolver(signUpSchema),
@@ -33,22 +37,87 @@ const page = () => {
       })
 
 
+      const otpForm =  useForm<z.infer<typeof otpSchema>>({
+        resolver: zodResolver(otpSchema),
+        defaultValues: {
+          otp: "",
+        },
+      })
 
 
 
 
-      function onSubmit(values: z.infer<typeof signUpSchema>) {
 
-        console.log('hiii');
-        
-        // Do something with the form values.
-        // ✅ This will be type-safe and validated.
-        console.log(values)
+
+      const onSubmit = async(values: z.infer<typeof signUpSchema>)=>{
+        try {
+
+
+
+
+
+    await signUp?.create({
+            emailAddress: values.email,
+            password:values.password,
+          });
+
+ await signUp?.prepareEmailAddressVerification({
+  strategy:'email_code'
+})
+
+
+
+
+
+
+
+          
+       
+        } catch (err) {
+          console.error('Error signing in:', err);
+        }
       }
 
+const router = useRouter()
+
+
+async function onPressVerify(values: z.infer<typeof otpSchema>){
+ 
+ 
+    if(!isLoaded){
+      return
+    }
+
+
+    try {
+
+      const code = values.otp
+      const result = await signUp?.attemptEmailAddressVerification({code})
+      
+if(result.status==='complete'){
+await setActive({session:result.createdSessionId})
+router.push('/')
+}
+
+
+    } catch (error:any) {
+      console.log(error.message);
+      
+      
+    }
+
+}
 
 
 
+
+
+
+
+
+if(!isLoaded){
+  return null
+}
 
 
 
@@ -114,10 +183,45 @@ const page = () => {
       <Button type="submit" className='w-full' >Submit</Button>
     </form>
   </Form>
-{/* 
-  <Button>Submit Test</Button> */}
+
+
+  <Form {...otpForm}>
+    <form onSubmit={otpForm.handleSubmit(onPressVerify)} className="space-y-2">
+      <FormField
+        control={otpForm.control}
+        name="otp"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Otp</FormLabel>
+            <FormControl>
+              <Input placeholder="Enter Otp" {...field} />
+            </FormControl>
+            
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+
+
+
+
+
+
+
+
+
+
+      <Button type="submit" className='w-full' >Submit OTP</Button>
+    </form>
+  </Form>
   </div>
   )
 }
 
 export default page
+// import { SignUp } from '@clerk/nextjs'
+
+// export default function Page() {
+//   return <SignUp />
+// }
